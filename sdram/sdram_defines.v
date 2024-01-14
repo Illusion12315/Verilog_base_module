@@ -1,0 +1,9 @@
+`define Command_Inhibit     4'b1xxx
+`define No_operation        4'b0111
+`define Load_Mode_Register  4'b0000
+`define Precharge           4'b0010
+`define Refresh             4'b0001
+`define Bank_Active         4'b0011
+`define Write               4'b0100
+`define Read                4'b0101
+`define Burst_Terminate     4'b0110

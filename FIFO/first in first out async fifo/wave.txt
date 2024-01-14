@@ -1,0 +1,22 @@
+{ signal: [
+  { name: "rd_clk",         wave: "P....................." },
+  { name: "rd_en",        wave: "0......10...1..0...", data: ["head", "body", "tail", "data"] },
+  { name: "rd_en_r1",        wave: "0.......10...1..0...", data: ["head", "body", "tail", "data"] },
+  { name: "dout",     wave: "xxxxxxx33....443....",data: ["D1", "D2", "D3", "D4", "D4"] },
+  { name: "empty",     wave: "1......0.......1......0.........." },
+  { name: "addr_switch",     wave: "0............1.0......" },
+  {},
+  { name: "standard_rd_en", wave: "0......10...1..0..." },
+  { name: "standard_addr", wave: "2......22....222.....",data: ["0", "1", "2", "3", "4"] },
+  { name: "standard_dout", wave: "xxxxx3..3.....33xx" ,data: ["D1", "D2", "D3", "D4"]},
+  { name: "standard_pre_addr", wave: "2......22....222.....",data: ["1", "2", "3", "4", "5"] },
+  { name: "standard_pre_dout", wave: "xxxxxx4.4.....44xx" ,data: ["D2", "D3", "D4", "Dx"]},
+  { name: "standard_empty", wave: "1.....0........1..." },
+  { name: "standard_empty_r1", wave: "1......0........1.." },
+
+  { name: "wr_en",  wave: "011110.............", data: ["head", "body", "tail", "data"] },
+  { name: "wr_addr", wave: "2.2222....",data: ["0", "1", "2", "3", "4"] },
+  { name: "wr_addr2sync", wave: "2...2222....",data: ["0", "1", "2", "3", "4"] },
+  { name: "din",     wave: "x2222xxxxxxxxxxxxxx" ,data: ["D1", "D2", "D3", "D4"]},
+  { name: "full",     wave: "0.............." },
+]}
