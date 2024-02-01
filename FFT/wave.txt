@@ -1,0 +1,13 @@
+{ signal: [
+  { name: "clk",         wave: "P............" },
+  { name: "start",        wave: "010........" },
+  { name: "data",     wave: "x2222x....", data: ["D0", "D1", "D2", "D3"] },
+  { name: "data_r1",     wave: "x.2222x....", data: ["D0", "D1", "D2", "D3"] },
+  { name: "data_r2",     wave: "x..2222x....", data: ["D0", "D1", "D2", "D3"] },
+  { name: "data_r3",     wave: "x...2222x....", data: ["D0", "D1", "D2", "D3"] },
+  { name: "n2_start",        wave: "0..10........" },
+  { name: "cnt",     wave: "2.22222...", data: ["0", "1", "2", "3","4","0"] },
+  { name: "x1_out1",     wave: "x..2222x.....", data: ["x2(0)", "x2(1)", "x2(2)", "x2(3)","4","0"] },
+  { name: "n2_done",        wave: "0...10........" },
+  { name: "n2_start",        wave: "0.....10........" },
+]}
