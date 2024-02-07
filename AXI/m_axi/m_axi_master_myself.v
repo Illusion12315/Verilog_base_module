@@ -65,8 +65,213 @@ module m_axi_master_myself #(
     input  wire                         M_AXI_RVALID               ,// Read valid. This signal indicates that the channel is signaling the required read data.
     output wire                         M_AXI_RREADY                // Read ready. This signal indicates that the master can accept the read data and response information.
 );
+// ********************************************************************************** // 
+//---------------------------------------------------------------------
+// function called clogb2 that returns an integer which has the value of the ceiling of the log base 2
+// for example, b = 8, a = clogb2(b) = 4
+//---------------------------------------------------------------------
+function integer clogb2;
+    input                               integer bit_depth          ;
+    for (clogb2 = 0; bit_depth>0; clogb2=clogb2+1) begin
+        bit_depth = bit_depth >> 1;
+    end
+endfunction
+// ********************************************************************************** // 
+//---------------------------------------------------------------------
+// regs and wires and localparams
+//---------------------------------------------------------------------
+localparam                              integer C_TRANSACTIONS_NUM = clogb2(C_M_AXI_BURST_LEN-1);// C_TRANSACTIONS_NUM is the width of the index counter for  number of write or read transaction.
+reg                    [C_M_AXI_ADDR_WIDTH-1:0]axi_awaddr_r               ;
+reg                                     axi_awvalid_r              ;
 
+reg                    [C_M_AXI_DATA_WIDTH-1:0]axi_wdata_r                ;
+reg                                     axi_wlast_r                ;
+reg                                     axi_wvalid_r               ;
 
+reg                                     axi_bready_r               ;
 
+reg                    [C_M_AXI_ADDR_WIDTH-1:0]axi_araddr_r               ;
+reg                                     axi_arvalid_r              ;
+
+reg                                     axi_rready_r               ;
+
+wire                   [C_TRANSACTIONS_NUM+2:0]burst_size_bytes           ;
+reg                    [C_TRANSACTIONS_NUM:0]write_index                ;
+reg                    [C_TRANSACTIONS_NUM:0]read_index                 ;
+
+reg                                     single_write_burst_start_pluse;
+reg                                     single_read_burst_start_pluse;
+// ********************************************************************************** // 
+//---------------------------------------------------------------------
+// assigns
+//---------------------------------------------------------------------
+//I/O Connections. Write Address (AW)
+assign M_AXI_AWID = 'b0;                                            //I/O Connections. Write Address (AW)
+assign M_AXI_AWADDR = C_M_TARGET_SLAVE_BASE_ADDR + axi_awaddr_r;    //The AXI address is a concatenation of the target base address + active offset range
+assign M_AXI_AWLEN = C_M_AXI_BURST_LEN - 1;                         //Burst LENgth is number of transaction beats, minus 1
+assign M_AXI_AWSIZE = clogb2((C_M_AXI_DATA_WIDTH/8)-1);             //Size should be C_M_AXI_DATA_WIDTH, in 2^SIZE bytes, otherwise narrow bursts are used
+assign M_AXI_AWBURST = 2'b01;                                       //INCR burst type is usually used, except for keyhole bursts
+assign M_AXI_AWLOCK = 1'b0;
+assign M_AXI_AWCACHE = 4'b0010;                                     //Update value to 4'b0011 if coherent accesses to be used via the Zynq ACP port. Not Allocated, Modifiable, not Bufferable. Not Bufferable since this example is meant to test memory, not intermediate cache. 
+assign M_AXI_AWPROT = 3'h0;
+assign M_AXI_AWQOS = 4'h0;
+assign M_AXI_AWUSER = 1'b1;
+assign M_AXI_AWVALID = axi_awvalid_r;
+//Write Data(W)
+assign M_AXI_WDATA = axi_wdata_r;
+assign M_AXI_WSTRB = {(C_M_AXI_DATA_WIDTH/8){1'b1}};                //All bursts are complete and aligned in this example
+assign M_AXI_WLAST = axi_wlast_r;
+assign M_AXI_WUSER = 1'b0;
+assign M_AXI_WVALID = axi_wvalid_r;
+//Write Response (B)
+assign M_AXI_BREADY = axi_bready_r;
+//Read Address (AR)
+assign M_AXI_ARID = 1'b0;
+assign M_AXI_ARADDR = C_M_TARGET_SLAVE_BASE_ADDR + axi_araddr_r;
+assign M_AXI_ARLEN = C_M_AXI_BURST_LEN - 1;                         //Burst LENgth is number of transaction beats, minus 1
+assign M_AXI_ARSIZE = clogb2((C_M_AXI_DATA_WIDTH/8)-1);             //Size should be C_M_AXI_DATA_WIDTH, in 2^n bytes, otherwise narrow bursts are used
+assign M_AXI_ARBURST = 2'b01;                                       //INCR burst type is usually used, except for keyhole bursts
+assign M_AXI_ARLOCK = 1'b0;
+assign M_AXI_ARCACHE = 4'b0010;                                     //Update value to 4'b0011 if coherent accesses to be used via the Zynq ACP port. Not Allocated, Modifiable, not Bufferable. Not Bufferable since this example is meant to test memory, not intermediate cache. 
+assign M_AXI_ARPROT = 3'h0;
+assign M_AXI_ARQOS = 4'h0;
+assign M_AXI_ARUSER = 1'b1;
+assign M_AXI_ARVALID = axi_arvalid_r;
+//Read and Read Response (R)
+assign M_AXI_RREADY = axi_rready_r;
+
+//Burst size in bytes
+assign burst_size_bytes    = C_M_AXI_BURST_LEN * C_M_AXI_DATA_WIDTH/8;
+// ********************************************************************************** // 
+//---------------------------------------------------------------------
+// 
+//---------------------------------------------------------------------
+//--------------------
+//Write Address Channel
+//--------------------
+always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+    if(!M_AXI_ARESETN)
+        axi_awvalid_r <= 'd0;
+    else if (M_AXI_AWREADY && axi_awvalid_r)
+        axi_awvalid_r <= 'd0;
+    else if (single_write_burst_start_pluse)
+        axi_awvalid_r <= 'd1;
+    else
+        axi_awvalid_r <= axi_awvalid_r;
+end
+// Next address after AWREADY indicates previous address acceptance
+always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+    if(!M_AXI_ARESETN)
+        axi_awaddr_r <= 'd0;
+    else if (M_AXI_AWREADY && axi_awvalid_r)
+        axi_awaddr_r <= axi_awaddr_r + burst_size_bytes;
+    else
+        axi_awaddr_r <= axi_awaddr_r;
+end
+//--------------------
+//Write Data Channel
+//--------------------
+always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+    if(!M_AXI_ARESETN)
+        axi_wvalid_r <= 'd0;
+    else if (axi_wlast_r)
+        axi_wvalid_r <= 'd0;
+    else if (single_write_burst_start_pluse)
+        axi_wvalid_r <= 'd1;
+    else
+        axi_wvalid_r <= axi_wvalid_r;
+end
+
+always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+    if(!M_AXI_ARESETN)
+        write_index <= 'd0;
+    else if (single_write_burst_start_pluse)
+        write_index <= 'd0;
+    else if (write_index == C_M_AXI_BURST_LEN-1 && M_AXI_WREADY && axi_wvalid_r)
+        write_index <= 'd0;
+    else if (M_AXI_WREADY && axi_wvalid_r)
+        write_index <= write_index + 'd1;
+    else
+        write_index <= write_index;
+end
+
+always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+    if(!M_AXI_ARESETN)
+        axi_wlast_r <= 'd0;
+    else if (((write_index == C_M_AXI_BURST_LEN-2 && C_M_AXI_BURST_LEN >= 2) && M_AXI_WREADY && axi_wvalid_r) || (C_M_AXI_BURST_LEN == 1 ))
+        axi_wlast_r <= 'd1;
+    else
+        axi_wlast_r <= 'd0;
+end
+
+always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+    if(!M_AXI_ARESETN)
+        axi_wdata_r <= 'd0;
+    else if (M_AXI_WREADY && axi_wvalid_r)
+        axi_wdata_r <= axi_wdata_r + 'd1;
+    else
+        axi_wdata_r <= axi_wdata_r;
+end
+//----------------------------
+//Write Response (B) Channel
+//----------------------------
+always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+    if(!M_AXI_ARESETN)
+        axi_bready_r <= 'd0;
+    else if (M_AXI_BVALID && axi_bready_r)
+        axi_bready_r <= 'd0;
+    else if (M_AXI_BVALID)
+        axi_bready_r <= 'd1;
+    else
+        axi_bready_r <= axi_bready_r;
+end
+//----------------------------
+//Read Address Channel
+//----------------------------
+always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+    if(!M_AXI_ARESETN)
+        axi_arvalid_r <= 'd0;
+    else if (M_AXI_ARREADY && axi_arvalid_r)
+        axi_arvalid_r <= 'd0;
+    else if (single_read_burst_start_pluse)
+        axi_arvalid_r <= 'd1;
+    else
+        axi_arvalid_r <= axi_arvalid_r;
+end
+// Next address after ARREADY indicates previous address acceptance
+always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+    if(!M_AXI_ARESETN)
+        axi_araddr_r <= 'd0;
+    else if (M_AXI_ARREADY && axi_arvalid_r)
+        axi_araddr_r <= axi_araddr_r + burst_size_bytes;
+    else
+        axi_araddr_r <= axi_araddr_r;
+end
+//--------------------------------
+//Read Data (and Response) Channel
+//--------------------------------
+always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+    if(!M_AXI_ARESETN)
+        axi_rready_r <= 'd0;
+    else if (M_AXI_RVALID) begin
+        if (M_AXI_RLAST && axi_rready_r)
+            axi_rready_r <= 'd0;
+        else
+            axi_rready_r <= 'd1;
+    end
+    else
+        axi_rready_r <= axi_rready_r;
+end
+// Burst length counter. Uses extra counter register bit to indicate terminal count to reduce decode logic   
+always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+    if(!M_AXI_ARESETN)
+        read_index <= 'd0;
+    else if (M_AXI_RLAST)
+        read_index <= 'd0;
+    else if (M_AXI_RVALID && axi_rready_r && (read_index != C_M_AXI_BURST_LEN-1))
+        read_index <= read_index + 'd1;
+    else
+        read_index <= read_index;
+end
 
 endmodule
