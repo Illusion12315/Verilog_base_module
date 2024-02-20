@@ -16,6 +16,8 @@ module fft_n64_base_n4 #(
 //---------------------------------------------------------------------
 // localparam and regs
 //---------------------------------------------------------------------
+    integer i;
+
     reg      signed    [DATA_WIDTH-1: 0]xn_ram_real         [0:63]  ;
     reg      signed    [DATA_WIDTH-1: 0]xn_ram_imag         [0:63]  ;
 
@@ -44,8 +46,26 @@ module fft_n64_base_n4 #(
     reg      signed    [DATA_WIDTH-1: 0]dataB2_imag         [0:15]  ;
     reg      signed    [DATA_WIDTH-1: 0]dataC2_imag         [0:15]  ;
     reg      signed    [DATA_WIDTH-1: 0]dataD2_imag         [0:15]  ;
+// ********************************************************************************** // 
+//---------------------------------------------------------------------
+// Wn
+//---------------------------------------------------------------------
+    reg      signed    [DATA_WIDTH-1: 0]WnB1_real           [0:15]  ;
+    reg      signed    [DATA_WIDTH-1: 0]WnB1_imag           [0:15]  ;
+    reg      signed    [DATA_WIDTH-1: 0]WnC1_real           [0:15]  ;
+    reg      signed    [DATA_WIDTH-1: 0]WnC1_imag           [0:15]  ;
+    reg      signed    [DATA_WIDTH-1: 0]WnD1_real           [0:15]  ;
+    reg      signed    [DATA_WIDTH-1: 0]WnD1_imag           [0:15]  ;
+    reg      signed    [DATA_WIDTH-1: 0]WnB2_real           [0:15]  ;
+    reg      signed    [DATA_WIDTH-1: 0]WnB2_imag           [0:15]  ;
+    reg      signed    [DATA_WIDTH-1: 0]WnC2_real           [0:15]  ;
+    reg      signed    [DATA_WIDTH-1: 0]WnC2_imag           [0:15]  ;
+    reg      signed    [DATA_WIDTH-1: 0]WnD2_real           [0:15]  ;
+    reg      signed    [DATA_WIDTH-1: 0]WnD2_imag           [0:15]  ;
 
-    integer i;
+always@(*)begin
+    
+end
 // ********************************************************************************** // 
 //---------------------------------------------------------------------
 // stage 1
@@ -54,7 +74,7 @@ module fft_n64_base_n4 #(
 generate
     begin
         genvar i;
-        for (i = 0; i <= 15; i = i+1) begin:add1
+        for (i = 0; i <= 15; i = i+1) begin:stage1
             // add1
             always@(*)begin
                 // x(1:16) + x(33:48)
@@ -86,12 +106,53 @@ generate
                 dataD1_imag[i] <= dataC_imag[i] + dataD_real[i];
             end
             // complex multiplicate
-            always@(posedge sys_clk_i)begin
-                
+            always@(*)begin
+                dataA2_real[i] = dataA1_real[i];
+                dataA2_imag[i] = dataA1_imag[i];
             end
-            // 
+            complex_multiplier  B_multiply_Wn (
+                .sys_clk_i                          (sys_clk_i                 ),
+                .rst_n_i                            (rst_n_i                   ),
+                .data1_real_i                       (dataB1_real[i]            ),
+                .data1_imag_i                       (dataB1_imag[i]            ),
+                .data2_real_i                       (WnB1_real[i]              ),
+                .data2_imag_i                       (WnB1_imag[i]              ),
+                .data_out_real_o                    (dataB2_real[i]            ),
+                .data_out_imag_o                    (dataB2_imag[i]            ) 
+            );
+            complex_multiplier  C_multiply_Wn (
+                .sys_clk_i                          (sys_clk_i                 ),
+                .rst_n_i                            (rst_n_i                   ),
+                .data1_real_i                       (dataC1_real[i]            ),
+                .data1_imag_i                       (dataC1_imag[i]            ),
+                .data2_real_i                       (WnC1_real[i]              ),
+                .data2_imag_i                       (WnC1_imag[i]              ),
+                .data_out_real_o                    (dataC2_real[i]            ),
+                .data_out_imag_o                    (dataC2_imag[i]            ) 
+            );
+            complex_multiplier  D_multiply_Wn (
+                .sys_clk_i                          (sys_clk_i                 ),
+                .rst_n_i                            (rst_n_i                   ),
+                .data1_real_i                       (dataD1_real[i]            ),
+                .data1_imag_i                       (dataD1_imag[i]            ),
+                .data2_real_i                       (WnD1_real[i]              ),
+                .data2_imag_i                       (WnD1_imag[i]              ),
+                .data_out_real_o                    (dataD2_real[i]            ),
+                .data_out_imag_o                    (dataD2_imag[i]            ) 
+            );
         end
     end
 endgenerate
-
+// ********************************************************************************** // 
+//---------------------------------------------------------------------
+// stage 2
+//---------------------------------------------------------------------
+generate
+    begin
+        genvar i;
+        for (i = 0; i <= 15; i = i+1) begin:stage2
+            
+        end
+    end
+endgenerate
 endmodule
