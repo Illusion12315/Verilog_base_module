@@ -115,8 +115,23 @@ end
 //---------------------------------------------------------------------
 // simple double port ram
 //---------------------------------------------------------------------
+simple_double_port_ram # (
+    .DATA_WIDTH                         (DATA_WIDTH                ),
+    .RAM_DEEPTH                         (FIFO_DEEP                 ) 
+  )
+  simple_double_port_ram_inst (
+    .wr_clk_i                           (wr_clk_i                  ),
+    .wr_rst_i                           (wr_rst_n_i                ),
+    .wr_en_i                            (wr_en_i                   ),
+    .wr_addr_i                          (wr_addr                   ),
+    .wr_data_i                          (din                       ),
 
-
+    .rd_clk_i                           (rd_clk_i                  ),
+    .rd_rst_i                           (rd_rst_n_i                ),
+    .rd_en_i                            (rd_en_i                   ),
+    .rd_addr_i                          (rd_addr                   ),
+    .rd_data_o                          (dout                      ) 
+  );
 // ********************************************************************************** // 
 //---------------------------------------------------------------------
 // bin2gray and gray2bin function
