@@ -31,6 +31,17 @@ dataD = butterfly_base_n4(data1(13:16),4,1);
 
 data2 = [dataA,dataB,dataC,dataD];
 b = rader(data2);
+c = 0:15;
+d = rader(c);
+b_real = real(b);
+b_imag = imag(b);
+
+figure
+subplot(2,1,1)
+plot(b_real);
+subplot(2,1,2)
+plot(b_imag);
+
 figure
 subplot(2,1,1)
 plot(abs(a));
