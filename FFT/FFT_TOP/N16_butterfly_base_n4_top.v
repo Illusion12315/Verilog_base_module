@@ -33,22 +33,80 @@ module N16_butterfly_base_n4_top #(
 
     reg                                 data_in_valid_r1           ;
     wire                                data_in_valid_posedge      ;
-    reg                [   5: 0]        wait_period_cnt            ;
+    reg                [   5: 0]        period_cnt                 ;
     reg                [   3: 0]        revorder_addr              ;
 
-    wire                                data_in_valid_time16       ;
+    wire                                data_in_valid_time16       ;// data in valid
+    wire                                data_out_valid_r           ;
 
     reg                [   3: 0]        xn_cache1_addr             ;
+    reg                [   1: 0]        next_state                 ;
+    reg                [   1: 0]        cur_state                  ;
 // ********************************************************************************** // 
 //---------------------------------------------------------------------
-// serial trans to parallel
+// ztj
 //---------------------------------------------------------------------
-    assign                              data_in_valid_posedge     = data_in_valid_i & ~data_in_valid_r1;
-    assign                              data_in_valid_time16      = data_in_valid_posedge || ((wait_period_cnt >= 'd1) && (wait_period_cnt <= 'd15));
+    localparam                          IDLE                      = 0;
+    localparam                          TRANS                     = 1;
+    localparam                          CALCULATE                 = 2;
+    localparam                          OUTPUT                    = 3;
+
+//第一段,状态跳转,时序逻辑
+always@(posedge sys_clk_i or negedge rst_n_i)begin
+    if(!rst_n_i)
+        cur_state<=IDLE;
+    else
+        cur_state<=next_state;
+end
+
+//第二段,跳转条件,组合逻辑
+always@(*)begin
+    case(cur_state)
+        IDLE:
+            if (data_in_valid_posedge)
+                next_state <= TRANS;
+            else
+                next_state <= IDLE;
+        TRANS:
+            if (period_cnt == 'd16)
+                next_state <= CALCULATE;
+            else
+                next_state <= TRANS;
+        CALCULATE:
+            if (period_cnt == 'd19)
+                next_state <= OUTPUT;
+            else
+                next_state <= CALCULATE;
+        OUTPUT:
+            if (period_cnt == 'd35)
+                next_state <= IDLE;
+            else
+                next_state <= OUTPUT;
+        default:next_state <= IDLE;
+    endcase
+end
+
+always@(posedge sys_clk_i or negedge rst_n_i)begin
+    if (!rst_n_i) begin
+        period_cnt <= 'd0;
+    end
+    else if (next_state == IDLE) begin
+        period_cnt <= 'd0;
+    end
+    else
+        period_cnt <= period_cnt + 'd1;
+end
 
 always@(posedge sys_clk_i)begin
     data_in_valid_r1 <= data_in_valid_i;
 end
+
+    assign                              data_in_valid_posedge     = data_in_valid_i & ~data_in_valid_r1;
+// ********************************************************************************** // 
+//---------------------------------------------------------------------
+// serial trans to parallel
+//---------------------------------------------------------------------
+    assign                              data_in_valid_time16      = (next_state == TRANS);
 
 always@(posedge sys_clk_i or negedge rst_n_i)begin
     if (!rst_n_i) begin
@@ -169,9 +227,7 @@ end
 //---------------------------------------------------------------------
 // rader
 //---------------------------------------------------------------------
-    wire                                data_out_valid_r           ;
-
-    assign                              data_out_valid_r          = (wait_period_cnt >= 'd19) && (wait_period_cnt < 'd35);
+    assign                              data_out_valid_r          = (next_state == OUTPUT);
 
 always@(posedge sys_clk_i or negedge rst_n_i)begin
     if (!rst_n_i) begin
@@ -179,22 +235,6 @@ always@(posedge sys_clk_i or negedge rst_n_i)begin
     end
     else
         data_out_valid_o <= data_out_valid_r;
-end
-
-always@(posedge sys_clk_i or negedge rst_n_i)begin
-    if (!rst_n_i) begin
-        wait_period_cnt <= 'd0;
-    end
-    else begin
-        if (wait_period_cnt < 'd35 && wait_period_cnt >= 'd1) begin
-            wait_period_cnt <= wait_period_cnt + 'd1;
-        end
-        else if (data_in_valid_posedge) begin
-            wait_period_cnt <= 'd1;
-        end
-        else
-            wait_period_cnt <= 'd0;
-    end
 end
 
 always@(posedge sys_clk_i or negedge rst_n_i)begin
@@ -222,4 +262,5 @@ always@(posedge sys_clk_i or negedge rst_n_i)begin
         xk_imag_o <= 'd0;
     end
 end
+
 endmodule
