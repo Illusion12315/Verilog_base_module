@@ -1,5 +1,23 @@
 `timescale 1 ns / 1 ps
-
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: chen xiongzhi
+// 
+// Create Date: 2023/12/29
+// Design Name: 
+// Module Name: s_axi_lite_myself
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 module s_axi_lite_myself #(
     parameter                           REG_NUM = 4                ,
     parameter                           C_S_AXI_DATA_WIDTH = 32    ,// Width of S_AXI data bus

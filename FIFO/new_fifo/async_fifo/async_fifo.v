@@ -1,4 +1,23 @@
-
+`timescale 1 ns / 1 ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: chen xiongzhi
+// 
+// Create Date: 2024/1/24
+// Design Name: 
+// Module Name: async_fifo
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 module async_fifo #(
     parameter                           FIFO_DEEP                 = 1024,
     parameter                           DATA_WIDTH                = 8,

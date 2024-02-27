@@ -1,4 +1,22 @@
-
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: chen xiongzhi
+// 
+// Create Date: 2024/2/24
+// Design Name: 
+// Module Name: N4_butterfly_base_n4
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 module N4_butterfly_base_n4 #(
     // parameter                           Wn_WIDTH                  = 1,
     parameter                           DATA_WIDTH                = 8,

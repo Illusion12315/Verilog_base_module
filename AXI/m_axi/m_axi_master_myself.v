@@ -1,5 +1,23 @@
 `timescale 1 ns / 1 ps
-
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: chen xiongzhi
+// 
+// Create Date: 2024/1/13
+// Design Name: 
+// Module Name: m_axi_master_myself
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 module m_axi_master_myself #(
     parameter                           C_M_TARGET_SLAVE_BASE_ADDR = 32'h40000000,// Base address of targeted slave
     parameter                           C_M_AXI_BURST_LEN = 16     ,// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
