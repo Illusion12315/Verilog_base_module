@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: chen xiongzhi
 // 
-// Create Date: 2024/1/13
+// Create Date: 2024/3/3
 // Design Name: 
-// Module Name: m_axi_master_myself
+// Module Name: m_axi2ram_rd_and_wr
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -18,7 +18,7 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-module m_axi_master_myself #(
+module m_axi2ram_rd_and_wr #(
     parameter                           C_M_TARGET_SLAVE_BASE_ADDR= 32'h40000000,// Base address of targeted slave
     parameter                           C_M_AXI_BURST_LEN         = 16,// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
     parameter                           C_M_AXI_ID_WIDTH          = 1,// Thread ID Width
@@ -31,8 +31,17 @@ module m_axi_master_myself #(
     parameter                           C_M_AXI_BUSER_WIDTH       = 0// Width of User Response Bus
 ) (
     //-------------------------customrize---------------------------//
-    input                               single_write_burst_start_pluse,
-    input                               single_read_burst_start_pluse,
+    input                               wr_start_i                 ,
+    input              [C_M_AXI_ADDR_WIDTH-1: 0]wr_addr_i          ,
+    input              [C_M_AXI_DATA_WIDTH-1: 0]wr_data_i          ,
+    output                              wr_data_respond_o          ,
+    output                              wr_burst_done_o            ,
+
+    input                               rd_start_i                 ,
+    input              [C_M_AXI_ADDR_WIDTH-1: 0]rd_addr_i          ,
+    output             [C_M_AXI_DATA_WIDTH-1: 0]rd_data_o          ,
+    output                              rd_data_valid_o            ,
+    output                              rd_burst_done_o            ,
     //----------------------m AXI MM interface---------------------//
     input  wire                         M_AXI_ACLK                 ,// Global Clock Signal.
     input  wire                         M_AXI_ARESETN              ,// Global Reset Singal. This Signal is Active Low
@@ -118,8 +127,8 @@ endfunction
     reg                [C_TRANSACTIONS_NUM: 0]write_index          ;
     reg                [C_TRANSACTIONS_NUM: 0]read_index           ;
 
-    // reg                                 single_write_burst_start_pluse  ;
-    // reg                                 single_read_burst_start_pluse  ;
+    // reg                                 wr_start_i  ;
+    // reg                                 rd_start_i  ;
 // ********************************************************************************** // 
 //---------------------------------------------------------------------
 // assigns
@@ -161,6 +170,13 @@ endfunction
 
 //Burst size in bytes
     assign                              burst_size_bytes          = C_M_AXI_BURST_LEN * C_M_AXI_DATA_WIDTH/8;
+
+//ram interface
+    assign                              wr_data_respond_o         = M_AXI_WREADY && axi_wvalid_r;
+    assign                              rd_burst_done_o           = M_AXI_BVALID && axi_bready_r;
+    assign                              rd_data_o                 = M_AXI_RDATA;
+    assign                              rd_data_valid_o           = M_AXI_RVALID && axi_rready_r;
+    assign                              rd_burst_done_o           = M_AXI_RLAST;
 // ********************************************************************************** // 
 //---------------------------------------------------------------------
 // main code
@@ -173,20 +189,23 @@ always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
         axi_awvalid_r <= 'd0;
     else if (M_AXI_AWREADY && axi_awvalid_r)
         axi_awvalid_r <= 'd0;
-    else if (single_write_burst_start_pluse)
+    else if (wr_start_i)
         axi_awvalid_r <= 'd1;
     else
         axi_awvalid_r <= axi_awvalid_r;
 end
 // Next address after AWREADY indicates previous address acceptance
-always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
-    if(!M_AXI_ARESETN)
-        axi_awaddr_r <= 'd0;
-    else if (M_AXI_AWREADY && axi_awvalid_r)
-        axi_awaddr_r <= axi_awaddr_r + burst_size_bytes;
-    else
-        axi_awaddr_r <= axi_awaddr_r;
+always@(*)begin
+    axi_awaddr_r = wr_addr_i;
 end
+// always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+//     if(!M_AXI_ARESETN)
+//         axi_awaddr_r <= 'd0;
+//     else if (M_AXI_AWREADY && axi_awvalid_r)
+//         axi_awaddr_r <= axi_awaddr_r + burst_size_bytes;
+//     else
+//         axi_awaddr_r <= axi_awaddr_r;
+// end
 //--------------------
 //Write Data Channel
 //--------------------
@@ -195,7 +214,7 @@ always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
         axi_wvalid_r <= 'd0;
     else if (axi_wlast_r)
         axi_wvalid_r <= 'd0;
-    else if (single_write_burst_start_pluse)
+    else if (wr_start_i)
         axi_wvalid_r <= 'd1;
     else
         axi_wvalid_r <= axi_wvalid_r;
@@ -204,7 +223,7 @@ end
 always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
     if(!M_AXI_ARESETN)
         write_index <= 'd0;
-    else if (single_write_burst_start_pluse)
+    else if (wr_start_i)
         write_index <= 'd0;
     else if (write_index == C_M_AXI_BURST_LEN-1 && M_AXI_WREADY && axi_wvalid_r)
         write_index <= 'd0;
@@ -223,14 +242,17 @@ always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
         axi_wlast_r <= 'd0;
 end
 
-always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
-    if(!M_AXI_ARESETN)
-        axi_wdata_r <= 'd0;
-    else if (M_AXI_WREADY && axi_wvalid_r)
-        axi_wdata_r <= axi_wdata_r + 'd1;
-    else
-        axi_wdata_r <= axi_wdata_r;
+always@(*)begin
+    axi_wdata_r = wr_data_i;
 end
+// always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+//     if(!M_AXI_ARESETN)
+//         axi_wdata_r <= 'd0;
+//     else if (M_AXI_WREADY && axi_wvalid_r)
+//         axi_wdata_r <= axi_wdata_r + 'd1;
+//     else
+//         axi_wdata_r <= axi_wdata_r;
+// end
 //----------------------------
 //Write Response (B) Channel
 //----------------------------
@@ -252,20 +274,23 @@ always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
         axi_arvalid_r <= 'd0;
     else if (M_AXI_ARREADY && axi_arvalid_r)
         axi_arvalid_r <= 'd0;
-    else if (single_read_burst_start_pluse)
+    else if (rd_start_i)
         axi_arvalid_r <= 'd1;
     else
         axi_arvalid_r <= axi_arvalid_r;
 end
 // Next address after ARREADY indicates previous address acceptance
-always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
-    if(!M_AXI_ARESETN)
-        axi_araddr_r <= 'd0;
-    else if (M_AXI_ARREADY && axi_arvalid_r)
-        axi_araddr_r <= axi_araddr_r + burst_size_bytes;
-    else
-        axi_araddr_r <= axi_araddr_r;
+always@(*)begin
+    axi_araddr_r = rd_addr_i;
 end
+// always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+//     if(!M_AXI_ARESETN)
+//         axi_araddr_r <= 'd0;
+//     else if (M_AXI_ARREADY && axi_arvalid_r)
+//         axi_araddr_r <= axi_araddr_r + burst_size_bytes;
+//     else
+//         axi_araddr_r <= axi_araddr_r;
+// end
 //--------------------------------
 //Read Data (and Response) Channel
 //--------------------------------
@@ -282,15 +307,15 @@ always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
         axi_rready_r <= axi_rready_r;
 end
 // Burst length counter. Uses extra counter register bit to indicate terminal count to reduce decode logic   
-always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
-    if(!M_AXI_ARESETN)
-        read_index <= 'd0;
-    else if (M_AXI_RLAST)
-        read_index <= 'd0;
-    else if (M_AXI_RVALID && axi_rready_r && (read_index != C_M_AXI_BURST_LEN-1))
-        read_index <= read_index + 'd1;
-    else
-        read_index <= read_index;
-end
+// always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
+//     if(!M_AXI_ARESETN)
+//         read_index <= 'd0;
+//     else if (M_AXI_RLAST)
+//         read_index <= 'd0;
+//     else if (M_AXI_RVALID && axi_rready_r && (read_index != C_M_AXI_BURST_LEN-1))
+//         read_index <= read_index + 'd1;
+//     else
+//         read_index <= read_index;
+// end
 
 endmodule
