@@ -225,7 +225,7 @@ end
 
 always@(posedge M_AXI_ACLK or negedge M_AXI_ARESETN)begin
     if(!M_AXI_ARESETN)
-        axi_wdata_r <= 'd0;
+        axi_wdata_r <= 'd1314;
     else if (M_AXI_WREADY && axi_wvalid_r)
         axi_wdata_r <= axi_wdata_r + 'd1;
     else
