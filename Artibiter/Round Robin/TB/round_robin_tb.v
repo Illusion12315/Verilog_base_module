@@ -34,7 +34,7 @@ initial begin
     # 100
     rst_n_i = 1;
     request_i = 4'b1111;
-    # 1000  
+    # 1000
     for (i = 0; i<100; i=i+1) begin
         #50
         test_rr;
@@ -45,11 +45,10 @@ task test_rr;
     request_i = $random;
 endtask
 
-
-  round_robin # (
+round_robin_v2 # (
     .REQUIRE_NUM                        (REQUIRE_NUM               ) 
   )
-  round_robin_inst (
+  round_robin_v2_inst (
     .sys_clk_i                          (sys_clk_i                 ),
     .rst_n_i                            (rst_n_i                   ),
     .request_i                          (request_i                 ),

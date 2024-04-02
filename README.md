@@ -16,7 +16,8 @@ module_base
 │  └─ 📁Round Robin
 │     ├─ 📁TB
 │     │  └─ 📄round_robin_tb.v
-│     └─ 📄round_robin.v
+│     ├─ 📄round_robin.v
+│     └─ 📄round_robin_v2.v
 ├─ 📁AXI
 │  ├─ 📁axi_lite
 │  │  ├─ 📁xgui
