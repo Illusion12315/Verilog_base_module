@@ -3,22 +3,22 @@ module first_word_fall_through_fifo #(
     parameter                           integer RD_DATA_WIDTH = 64 ,
     parameter                           integer WR_DATA_WIDTH = 64 ,
     parameter                           integer RAM_DATA_WIDTH = 64,
-    parameter                           integer WR_DEPTH = 1024     
+    parameter                           integer WR_DEPTH = 1024
 ) (
     input                               global_rst                 ,//全局复位，高有效
     
     input                               wr_clk                     ,
     input                               wr_en                      ,
-    input              [WR_DATA_WIDTH-1:0]din                        ,
+    input              [WR_DATA_WIDTH-1: 0]din                     ,
     output                              full                       ,
-    output             [clogb2(WR_DEPTH)-1:0]elements_wr                ,
+    output             [clogb2(WR_DEPTH)-1: 0]elements_wr          ,
     output                              prog_full                  ,
         
     input                               rd_clk                     ,
     input                               rd_en                      ,
-    output reg         [RD_DATA_WIDTH-1:0]dout                       ,
+    output reg         [RD_DATA_WIDTH-1: 0]dout                    ,
     output                              empty                      ,
-    output             [clogb2(WR_DEPTH)-1:0]elements_rd                ,
+    output             [clogb2(WR_DEPTH)-1: 0]elements_rd          ,
     output                              prog_empty                  
     );
 //-----------------------------------------
@@ -40,19 +40,20 @@ localparam                              integer RAM_ADDR_WIDTH = clogb2(WR_DEPTH
 //---------------------------------------------------------------------
 // wires
 //---------------------------------------------------------------------
-wire                   [RAM_ADDR_WIDTH-1:0]rdaddr                     ;
-wire                   [RAM_ADDR_WIDTH-1:0]pre_rdaddr                 ;
-wire                   [RD_DATA_WIDTH-1:0]pre_dout                   ;
-wire                   [RD_DATA_WIDTH-1:0]standard_dout              ;
-wire                                    addr_switch                ;
-wire                                    rd_en_posedge_flag         ;
-reg                                     rd_en_r1                   ;
-reg                                     valid                      ;
-reg                                     standard_empty_r1          ;
+    wire               [RAM_ADDR_WIDTH-1: 0]rdaddr                 ;
+    wire               [RAM_ADDR_WIDTH-1: 0]pre_rdaddr             ;
+    wire               [RD_DATA_WIDTH-1: 0]pre_dout                ;
+    wire               [RD_DATA_WIDTH-1: 0]standard_dout           ;
+    wire                                addr_switch                ;
+    wire                                rd_en_posedge_flag         ;
+    wire                                standard_empty             ;
+    reg                                 rd_en_r1                   ;
+    reg                                 valid                      ;
+    reg                                 standard_empty_r1          ;
 
-assign empty = standard_empty | standard_empty_r1;
-assign pre_rdaddr = rdaddr + 'd1;
-assign rd_en_posedge_flag = rd_en & ~rd_en_r1;
+    assign                              empty                     = standard_empty | standard_empty_r1;
+    assign                              pre_rdaddr                = rdaddr + 'd1;
+    assign                              rd_en_posedge_flag        = rd_en & ~rd_en_r1;
 
 always@(*)begin
     if (empty)begin
@@ -79,29 +80,29 @@ end
 // standard fifo
 //---------------------------------------------------------------------
 standard_fifo # (
-    .RD_DATA_WIDTH                     (RD_DATA_WIDTH             ),
-    .WR_DATA_WIDTH                     (WR_DATA_WIDTH             ),
-    .RAM_DATA_WIDTH                    (RAM_DATA_WIDTH            ),
-    .WR_DEPTH                          (WR_DEPTH                  ) 
+    .RD_DATA_WIDTH                      (RD_DATA_WIDTH             ),
+    .WR_DATA_WIDTH                      (WR_DATA_WIDTH             ),
+    .RAM_DATA_WIDTH                     (RAM_DATA_WIDTH            ),
+    .WR_DEPTH                           (WR_DEPTH                  ) 
   )
   standard_fifo_inst (
-    .global_rst                        (global_rst                ),
-    .wr_clk                            (wr_clk                    ),
-    .wr_en                             (wr_en                     ),
-    .din                               (din                       ),
-    .full                              (full                      ),
-    .elements_wr                       (elements_wr               ),
-    .prog_full                         (prog_full                 ),
+    .global_rst                         (global_rst                ),
+    .wr_clk                             (wr_clk                    ),
+    .wr_en                              (wr_en                     ),
+    .din                                (din                       ),
+    .full                               (full                      ),
+    .elements_wr                        (elements_wr               ),
+    .prog_full                          (prog_full                 ),
 
-    .rd_clk                            (rd_clk                    ),
-    .rd_en                             (rd_en                     ),
-    .dout                              (standard_dout             ),
-    .empty                             (standard_empty            ),
-    .elements_rd                       (elements_rd               ),
-    .prog_empty                        (prog_empty                ),
+    .rd_clk                             (rd_clk                    ),
+    .rd_en                              (rd_en                     ),
+    .dout                               (standard_dout             ),
+    .empty                              (standard_empty            ),
+    .elements_rd                        (elements_rd               ),
+    .prog_empty                         (prog_empty                ),
 
-    .rdaddr                            (rdaddr                    ),
-    .pre_rdaddr                        (pre_rdaddr                ),
-    .pre_dout                          (pre_dout                  ) 
+    .rdaddr                             (rdaddr                    ),
+    .pre_rdaddr                         (pre_rdaddr                ),
+    .pre_dout                           (pre_dout                  ) 
   );
 endmodule
