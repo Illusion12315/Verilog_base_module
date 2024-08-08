@@ -179,7 +179,28 @@ fifo_usb usb3_wr_fifo_inst (
 //---------------------------------------------------------------------
 // debug
 //---------------------------------------------------------------------
+ila_fdti601q_debug ila_fdti601q_debug_inst (
+    .clk                                (USB3_DCLK                 ),// input wire clk
 
+    .probe0                             (USB3_TXE_N                ),// input wire [0:0]  probe0  
+    .probe1                             (USB3_RXF_N                ),// input wire [0:0]  probe1 
+    .probe2                             (USB3_WR_N                 ),// input wire [0:0]  probe2 
+    .probe3                             (USB3_RD_N                 ),// input wire [0:0]  probe3 
+    .probe4                             (USB3_OE_N                 ),// input wire [0:0]  probe4 
+    .probe5                             (USB3_RESET                ),// input wire [0:0]  probe5 
+    .probe6                             (ftdi_master_oe            ),// input wire [0:0]  probe6 
+    .probe7                             (USB3_DATA                 ),// input wire [31:0]  probe7 
+    .probe8                             (USB3_BE_N                 ),// input wire [3:0]  probe8 
+    .probe9                             (state                     ),// input wire [5:0]  probe9 
+    .probe10                            (wr_fifo_rd_en             ),// input wire [0:0]  probe10 
+    .probe11                            (wr_fifo_empty             ),// input wire [0:0]  probe11 
+    .probe12                            (wr_fifo_dout              ),// input wire [31:0]  probe12 
+    .probe13                            (rd_fifo_wr_en             ),// input wire [0:0]  probe13 
+    .probe14                            (rd_fifo_din               ),// input wire [31:0]  probe14 
+    .probe15                            (rd_fifo_prog_full         ),// input wire [0:0]  probe15
+    .probe16                            (rd_data_count             ),// input wire [9:0]  probe16 
+    .probe17                            (wr_data_count             ) // input wire [9:0]  probe17
+);
 
 
 endmodule

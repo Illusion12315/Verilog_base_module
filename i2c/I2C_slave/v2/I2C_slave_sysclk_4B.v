@@ -149,17 +149,13 @@ always@(posedge sys_clk_i or negedge incycle)begin
         op_read <= SDA_delay;
 end
 // 获取操作地址
-always@(posedge sys_clk_i or negedge incycle)begin
-    if(!incycle)
-        op_addr[bitcnt] <= op_addr[bitcnt];
-    else if(adr_match && (bytecnt == 'd1) && bit_DATA && SCL_ne)
+always@(posedge sys_clk_i)begin
+    if(adr_match && (bytecnt == 'd1) && bit_DATA && SCL_ne)
         op_addr[bitcnt] <= SDA_delay;
 end
 // 获取写操作数据
-always@(posedge sys_clk_i or negedge incycle)begin
-    if(!incycle)
-        write_data[bytecnt-2][bitcnt] <= write_data[bytecnt-2][bitcnt];
-    else if(adr_match && bit_DATA && op_write && SCL_ne)
+always@(posedge sys_clk_i)begin
+    if(adr_match && bit_DATA && op_write && SCL_ne)
         case (bytecnt)
             2,3,4,5: write_data[bytecnt-2][bitcnt] <= SDA_delay;
             default: write_data[bytecnt-2][bitcnt] <= write_data[bytecnt-2][bitcnt];
