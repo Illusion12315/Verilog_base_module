@@ -96,46 +96,46 @@ end
 // SDA三态门
     assign                              SDA                       = SDA_en ? SDA_data : 1'bz;
 // I2C状态机逻辑
-always@(posedge sys_clk_i or negedge rst_n_i)begin
-    if(~rst_n_i)
+always@(posedge sys_clk_i)begin
+    if(!rst_n_i)
         state <= S_SLAVE_IDLE;
-    else
-        case(state)
-            S_SLAVE_IDLE:
+    else case(state)
+        S_SLAVE_IDLE:
+            if(incycle)
+                state <= S_MASTER_WRITE_DEVICE_ADR;
+        S_MASTER_WRITE_DEVICE_ADR:
+            if(~incycle)
                 state <= S_SLAVE_IDLE;
-            S_MASTER_WRITE_DEVICE_ADR:
-                if(SCL_ne && bit_ack)
-                    state <= S_MASTER_WRITE_WORD_ADR;
-                else if(i2c_start)
-                    state <= S_MASTER_WRITE_DEVICE_ADR;
-                else if(i2c_stop)
-                    state <= S_SLAVE_IDLE;
-            S_MASTER_WRITE_WORD_ADR:
-                if(SCL_ne && bit_ack)
-                    state <= S_MASTER_WRITE_DATA;
-                else if(i2c_start)
-                    state <= S_MASTER_WRITE_DEVICE_ADR;
-                else if(i2c_stop)
-                    state <= S_SLAVE_IDLE;
-            S_MASTER_WRITE_DATA:
-                if(i2c_start)
-                    state <= S_MASTER_WRITE_DEVICE_ADR;
-                else if(i2c_stop)
-                    state <= S_SLAVE_IDLE;
-            S_SLAVE_WAIT_INCYCLE:
-                if(incycle)
-                    state <= S_MASTER_READ_DEVICE_ADR;
-            S_MASTER_READ_DEVICE_ADR:
-                if(SCL_ne && bit_ack)
-                    state <= S_SLAVE_SEND_READ_DATA;
-            S_SLAVE_SEND_READ_DATA:
-                if(SCL_ne && bit_ack)
-                    state <= S_SLAVE_STOP;
-            S_SLAVE_STOP:
-                if(i2c_stop)
-                    state <= S_SLAVE_IDLE;
-            default:state <= S_SLAVE_IDLE;
-        endcase
+            else if(SCL_ne && bit_ack)
+                state <= S_MASTER_WRITE_WORD_ADR;
+        S_MASTER_WRITE_WORD_ADR:
+            if(~incycle)
+                state <= S_SLAVE_IDLE;
+            else if(SCL_ne && bit_ack)
+                state <= S_MASTER_WRITE_DATA;
+        S_MASTER_WRITE_DATA:
+            if(i2c_start)
+                state <= S_SLAVE_WAIT_INCYCLE;
+            else if(i2c_stop)
+                state <= S_SLAVE_IDLE;
+        S_SLAVE_WAIT_INCYCLE:
+            if(incycle)
+                state <= S_MASTER_READ_DEVICE_ADR;
+        S_MASTER_READ_DEVICE_ADR:
+            if(~incycle)
+                state <= S_SLAVE_IDLE;
+            else if(SCL_ne && bit_ack)
+                state <= S_SLAVE_SEND_READ_DATA;
+        S_SLAVE_SEND_READ_DATA:
+            if(~incycle)
+                state <= S_SLAVE_IDLE;
+            else if(SCL_ne && bit_ack && SDA_r2)
+                state <= S_SLAVE_STOP;
+        S_SLAVE_STOP:
+            if(i2c_stop)
+                state <= S_SLAVE_IDLE;
+        default:state <= S_SLAVE_IDLE;
+    endcase
 end
 // 周期计数器逻辑
 always@(posedge sys_clk_i)begin
@@ -211,12 +211,12 @@ end
 always@(posedge sys_clk_i)begin
     case (state)
         S_MASTER_WRITE_DEVICE_ADR,S_MASTER_WRITE_WORD_ADR,S_MASTER_WRITE_DATA,S_MASTER_READ_DEVICE_ADR:
-            if(bit_ack)
+            if(bit_ack && adr_match)
                 SDA_en <= 'd1;
             else
                 SDA_en <= 'd0;
         S_SLAVE_SEND_READ_DATA:
-            if(bit_data)
+            if(bit_data && adr_match)
                 SDA_en <= 'd1;
             else
                 SDA_en <= 'd0;
@@ -227,15 +227,15 @@ end
 always@(posedge sys_clk_i)begin
     case (state)
         S_MASTER_WRITE_DEVICE_ADR,S_MASTER_WRITE_WORD_ADR,S_MASTER_WRITE_DATA,S_MASTER_READ_DEVICE_ADR:
-            if(bit_ack)
-                SDA_data <= 'd1;
-            else
+            if(bit_ack && adr_match)
                 SDA_data <= 'd0;
+            else
+                SDA_data <= 'd1;
         S_SLAVE_SEND_READ_DATA:
-            if(bit_data)
+            if(bit_data && adr_match)
                 SDA_data <= read_data[bytecnt][bitcnt[2:0]];
             else
-                SDA_data <= 'd0;
+                SDA_data <= 'd1;
         default:SDA_data <= 'd1;
     endcase
 end
@@ -273,9 +273,9 @@ end
 
     assign                              ram_rd_addr_o             = op_addr;
 
-    assign                              ram_wr_data_o             = {write_data[3],write_data[2],write_data[1],write_data[0]};
+    assign                              ram_wr_data_o             = {write_data[0],write_data[1],write_data[2],write_data[3]};
 
-    assign                              {read_data[3],read_data[2],read_data[1],read_data[0]}= ram_rd_data_i;
+    assign                              {read_data[0],read_data[1],read_data[2],read_data[3]}= ram_rd_data_i;
 // ********************************************************************************** // 
 //---------------------------------------------------------------------
 // debug
