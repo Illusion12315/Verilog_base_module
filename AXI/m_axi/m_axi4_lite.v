@@ -171,6 +171,15 @@ endfunction
 //Read and Read Response (R)
     assign                          M_AXI_RREADY       = axi_rready_r;
 
+    assign                          single_write_burst_len_i= 8'h00;
+    assign                          single_read_burst_len_i= 8'h00;
+    assign                          M_AXI_BID          = 'd0;
+    assign                          M_AXI_BRESP        = 'd0;
+    assign                          M_AXI_BUSER        = 'd0;
+    assign                          M_AXI_RID          = 'd0;
+    assign                          M_AXI_RRESP        = 'd0;
+    assign                          M_AXI_RLAST        = 'd1;
+    assign                          M_AXI_RUSER        = 'd0;
 // ********************************************************************************** // 
 //---------------------------------------------------------------------
 // main code
