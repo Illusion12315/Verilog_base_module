@@ -12,17 +12,15 @@
 // ********************************************************************************** // 
 `default_nettype none
 
-module m_axi_master #(
-    // parameter                           C_M_TARGET_SLAVE_BASE_ADDR= 32'h40000000,// Base address of targeted slave
-    // parameter                           C_M_AXI_BURST_LEN         = 16    ,// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
-    parameter                           C_M_AXI_ID_WIDTH          = 1     ,// Thread ID Width
-    parameter                           C_M_AXI_ADDR_WIDTH        = 32    ,// Width of Address Bus
+module m_axi_full2single_burst_interface #(
+    parameter                           C_M_AXI_ADDR_WIDTH        = 12    ,// Width of Address Bus
     parameter                           C_M_AXI_DATA_WIDTH        = 32    ,// Width of Data Bus
-    parameter                           C_M_AXI_AWUSER_WIDTH      = 0     ,// Width of User Write Address Bus
-    parameter                           C_M_AXI_ARUSER_WIDTH      = 0     ,// Width of User Read Address Bus
-    parameter                           C_M_AXI_WUSER_WIDTH       = 0     ,// Width of User Write Data Bus
-    parameter                           C_M_AXI_RUSER_WIDTH       = 0     ,// Width of User Read Data Bus
-    parameter                           C_M_AXI_BUSER_WIDTH       = 0     // Width of User Response Bus
+    parameter                           C_M_AXI_ID_WIDTH          = 1     ,// Thread ID Width
+    parameter                           C_M_AXI_AWUSER_WIDTH      = 1     ,// Width of User Write Address Bus
+    parameter                           C_M_AXI_ARUSER_WIDTH      = 1     ,// Width of User Read Address Bus
+    parameter                           C_M_AXI_WUSER_WIDTH       = 1     ,// Width of User Write Data Bus
+    parameter                           C_M_AXI_RUSER_WIDTH       = 1     ,// Width of User Read Data Bus
+    parameter                           C_M_AXI_BUSER_WIDTH       = 1     // Width of User Response Bus
 ) (
     //-------------------------customrize---------------------------//
     input  wire                         single_write_burst_start_pluse_i,
