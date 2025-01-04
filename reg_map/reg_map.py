@@ -23,6 +23,15 @@ import pandas as pd
 import numpy as np
 from datetime import datetime as dt
 
+# 获取脚本所在目录的路径
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# 更改工作目录为脚本所在目录
+os.chdir(script_dir)
+
+# 打印当前工作目录
+print("当前工作目录：", os.getcwd())
+
 # 设置 Pandas 选项以适应未来的行为
 pd.set_option('future.no_silent_downcasting', True)
 
@@ -701,18 +710,18 @@ def arg_parser():
 
 # --Main-----------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
-    file_name_lst,sheet_name,author,name_rule,tar_file_name,ins_switch,logger_level = arg_parser()
+    file_name_lst, sheet_name, author, name_rule, tar_file_name, ins_switch, logger_level = arg_parser()
 
     logger = logging.getLogger(__name__)
-    logging.basicConfig(format = '%(levelname)s - %(message)s\n/-------------------------------------------------------------------------------------------',level=logger_level)
+    logging.basicConfig(format='%(levelname)s - %(message)s\n/-------------------------------------------------------------------------------------------', level=logger_level)
 
-    file_list  = file_name_lst if file_name_lst else [f for f in glob.glob('*.xls')+glob.glob('*.xlsx')]
+    file_list = file_name_lst if file_name_lst else [f for f in glob.glob('*.xls') + glob.glob('*.xlsx')]
     for file in file_list:
-        book = book(file,sheet_name,author,name_rule,tar_file_name)
+        reg_book = book(file, sheet_name, author, name_rule, tar_file_name)  # 修改变量名
 
     if ins_switch:
         print(f'''\nInstantiating...\n{'-'*60}''')
-        if book.tar_file_name_lst:
-            os.system(f'python ins.py -f {" ".join(book.tar_file_name_lst)}')
+        if reg_book.tar_file_name_lst:  # 使用修改后的变量名
+            os.system(f'python ins.py -f {" ".join(reg_book.tar_file_name_lst)}')
         else:
             os.system(f'python ins.py')

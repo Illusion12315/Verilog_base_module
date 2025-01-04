@@ -16,7 +16,7 @@ import argparse
 import glob
 
 class sources:
-    def __init__(self,file_name=None,module_name=None,ins_mode='inst_&_wire',ins_name=None,indentation=30,tar_file_name='DUT.sv'):
+    def __init__(self,file_name=None,module_name=None,ins_mode='inst_&_wire',ins_name=None,indentation=30,tar_file_name='instance.v'):
         self.file_name         = file_name
         self.module_name       = module_name
         self.ins_mode          = ins_mode
@@ -29,7 +29,7 @@ class sources:
         self.get_module(self.module_name)
 
         if self.head_lines:
-            self.write_list.append(['module {}();'.format('DUT')])
+            self.write_list.append(['module {}();'.format('instance')])
             for module_head_lines in self.head_lines:
                 module_curr = module(module_head_lines[0],list(module_head_lines[2:]),self.ins_mode,self.ins_name,self.indentation)
                 self.write_list.append(['\n//------------------------------Instantiated module: {} ------------------------------\n'.format(module_curr.ins_name)])
@@ -266,7 +266,7 @@ def arg_parser():
     parser.add_argument("-insmode",choices=['0','1','2'],help='0:{};1:{};2:{}'.format(ins_mode_list[0],ins_mode_list[1],ins_mode_list[2]),default=0)
     parser.add_argument("-insname",metavar="InstantiatedModuleName",help='specify the module name after instance',type=str)
     parser.add_argument("-indent",metavar="IndentWidth",help='specify the indentation of instance',type=int,default=30)
-    parser.add_argument("-fout",metavar="OutputFile",help='specify the output file',default='DUT.sv')
+    parser.add_argument("-fout",metavar="OutputFile",help='specify the output file',default='instance.v')
     parser.add_argument('-v','--verbose',choices=['DEBUG','INFO','WARNING','ERROR','CRITICAL'],dest='verbose',help='set logger_level',default='ERROR')
     parser.add_argument('-log',help='output log to log file',action='store_true')
 
@@ -302,6 +302,6 @@ if __name__ == "__main__":
     # logging.debug(f'logger_level:{logger_level}')
 
 
-    file_list  = file_name_lst if file_name_lst else [f for f in glob.glob('*.v')+glob.glob('*.sv') if not re.match(r'DUT.sv', f)]
+    file_list  = file_name_lst if file_name_lst else [f for f in glob.glob('*.v')+glob.glob('*.sv') if not re.match(r'instance.v', f)]
     for file in file_list:
         sources(file,module_name,ins_mode,ins_name,indentation,tar_file_name)
