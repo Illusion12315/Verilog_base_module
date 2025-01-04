@@ -53,6 +53,8 @@ class book:
 
         if sheet_name is None:
             for sheet_name,sheet_df in self.book.items():
+                # 删除空行
+                sheet_df = sheet_df.dropna(how='all').reset_index(drop=True)
                 if (sheet_df.empty):
                     print(f'{sheet_name} is empty!')
                 else:
@@ -60,6 +62,8 @@ class book:
                     self.tar_file_name_lst.append(tar_file_name_sheet)
                     sheet(creat_info_dict=self.creat_info_dict,sheet_name=sheet_name,sheet_df=sheet_df,name_rule=name_rule,tar_file_name=tar_file_name_sheet)
         else:
+            # 删除空行
+            sheet_df = sheet_df.dropna(how='all').reset_index(drop=True)
             tar_file_name_sheet = sheet_name+("_reg_map_cfg" if sheet_name.isupper() else "_reg_map_cfg")+'.v' if ( tar_file_name == '' ) else tar_file_name
             self.tar_file_name_lst.append(tar_file_name_sheet)
             sheet(creat_info_dict=self.creat_info_dict,sheet_name=sheet_name,sheet_df=self.book,name_rule=name_rule,tar_file_name=tar_file_name_sheet)
@@ -719,9 +723,9 @@ if __name__ == "__main__":
     for file in file_list:
         reg_book = book(file, sheet_name, author, name_rule, tar_file_name)  # 修改变量名
 
-    if ins_switch:
-        print(f'''\nInstantiating...\n{'-'*60}''')
-        if reg_book.tar_file_name_lst:  # 使用修改后的变量名
-            os.system(f'python ins.py -f {" ".join(reg_book.tar_file_name_lst)}')
-        else:
-            os.system(f'python ins.py')
+    # if ins_switch:
+    #     print(f'''\nInstantiating...\n{'-'*60}''')
+    #     if reg_book.tar_file_name_lst:  # 使用修改后的变量名
+    #         os.system(f'python ins.py -f {" ".join(reg_book.tar_file_name_lst)}')
+    #     else:
+    #         os.system(f'python ins.py')
