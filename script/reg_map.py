@@ -174,7 +174,8 @@ class sheet:
             self.name_rule = name_rule - 1
 
         df.insert(7,"Len_Cal",df["Len"])
-        df.insert(11,"FieldName_Cal",df["FieldName"].str.lower() if self.name_rule else df["FieldName"] )
+        # df.insert(11,"FieldName_Cal",df["FieldName"].str.lower() if self.name_rule else df["FieldName"] )
+        df.insert(11,"FieldName_Cal",df["FieldName"] if self.name_rule else df["FieldName"] )
         df.insert(16,"ResetValue_Cal",df["ResetValue"])
 
         for row_index in df.index:
